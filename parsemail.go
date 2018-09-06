@@ -380,7 +380,17 @@ func (hp headerParser) parseTime(s string) (t time.Time) {
 		return
 	}
 
-	t, hp.err = time.Parse(time.RFC1123Z, s)
+	t, hp.err = time.Parse("Mon, _2 Jan 2006 15:04:05 -0700 (MST)", s)
+	if hp.err == nil {
+		return t
+	}
+
+	t, hp.err = time.Parse("Mon, _2 Jan 2006 15:04:05 -0700 MST", s)
+	if hp.err == nil {
+		return t
+	}
+
+	t, hp.err = time.Parse(time.RFC822Z, s)
 	if hp.err == nil {
 		return t
 	}
