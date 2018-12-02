@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"mime"
 	"mime/multipart"
+	"mime/quotedprintable"
 	"net/mail"
 	"strings"
 	"time"
@@ -300,7 +301,14 @@ func decodePartData(part *multipart.Part) (io.Reader, error) {
 		if err != nil {
 			return nil, err
 		}
+		return bytes.NewReader(dd), nil
+	}
 
+	if strings.EqualFold(encoding, "quoted-printable") {
+		dd, err := ioutil.ReadAll(quotedprintable.NewReader(part))
+		if err != nil {
+			return nil, err
+		}
 		return bytes.NewReader(dd), nil
 	}
 
