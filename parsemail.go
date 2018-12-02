@@ -43,7 +43,8 @@ func Parse(r io.Reader) (email Email, err error) {
 	case contentTypeMultipartAlternative:
 		email.TextBody, email.HTMLBody, email.EmbeddedFiles, err = parseMultipartAlternative(msg.Body, params["boundary"])
 	case contentTypeTextPlain:
-		message, _ := ioutil.ReadAll(msg.Body)
+		message, _ := decodePlainTextBody(msg)
+		//message, _ := ioutil.ReadAll(msg.Body)
 		email.TextBody = strings.TrimSuffix(string(message[:]), "\n")
 	case contentTypeTextHTML:
 		message, _ := ioutil.ReadAll(msg.Body)
@@ -290,6 +291,37 @@ func decodeHeaderMime(header mail.Header) (mail.Header, error) {
 	}
 
 	return mail.Header(parsedHeader), nil
+}
+
+// decode plain-text body not multipart but encoded somehow
+func decodePlainTextBody(msg *mail.Message) ([]byte, error) {
+	encoding := msg.Header.Get("Content-Transfer-Encoding")
+
+	if strings.EqualFold(encoding, "base64") {
+		dr := base64.NewDecoder(base64.StdEncoding, msg.Body)
+		dd, err := ioutil.ReadAll(dr)
+		if err != nil {
+			return nil, err
+		}
+		return dd, nil
+		//return bytes.NewReader(dd), nil
+	}
+
+	if strings.EqualFold(encoding, "quoted-printable") {
+		dd, err := ioutil.ReadAll(quotedprintable.NewReader(msg.Body))
+		if err != nil {
+			return nil, err
+		}
+		return dd, nil
+		//return bytes.NewReader(dd), nil
+	}
+
+	dd, err := ioutil.ReadAll(msg.Body)
+	if err != nil {
+		return nil, err
+	}
+	return dd, nil
+	//return bytes.NewReader(dd), nil
 }
 
 func decodePartData(part *multipart.Part) (io.Reader, error) {
