@@ -139,11 +139,16 @@ func parseMultipartRelated(msg io.Reader, boundary string) (textBody, htmlBody s
 			}
 			textBody += strings.TrimSuffix(string(ppContent[:]), "\n")
 		case contentTypeTextHTML:
-			ppContent, err := ioutil.ReadAll(part)
+			plain, err := ioutil.ReadAll(part)
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
 			}
-
+			encoding := part.Header.Get("Content-Transfer-Encoding")
+			if strings.EqualFold(encoding, "base64") {
+				ppContent, _ = base64.StdEncoding.DecodeString(string(plain))
+			} else {
+				ppContent = plain
+			}
 			htmlBody += strings.TrimSuffix(string(ppContent[:]), "\n")
 		case contentTypeMultipartAlternative:
 			tb, hb, ef, err := parseMultipartAlternative(part, params["boundary"])
@@ -186,19 +191,31 @@ func parseMultipartAlternative(msg io.Reader, boundary string) (textBody, htmlBo
 		if err != nil {
 			return textBody, htmlBody, embeddedFiles, err
 		}
-
+		var ppContent []byte
 		switch contentType {
 		case contentTypeTextPlain:
-			ppContent, err := ioutil.ReadAll(part)
+			plain, err := ioutil.ReadAll(part)
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
+			}
+			encoding := part.Header.Get("Content-Transfer-Encoding")
+			if strings.EqualFold(encoding, "base64") {
+				ppContent, _ = base64.StdEncoding.DecodeString(string(plain))
+			} else {
+				ppContent = plain
 			}
 
 			textBody += strings.TrimSuffix(string(ppContent[:]), "\n")
 		case contentTypeTextHTML:
-			ppContent, err := ioutil.ReadAll(part)
+			plain, err := ioutil.ReadAll(part)
 			if err != nil {
 				return textBody, htmlBody, embeddedFiles, err
+			}
+			encoding := part.Header.Get("Content-Transfer-Encoding")
+			if strings.EqualFold(encoding, "base64") {
+				ppContent, _ = base64.StdEncoding.DecodeString(string(plain))
+			} else {
+				ppContent = plain
 			}
 
 			htmlBody += strings.TrimSuffix(string(ppContent[:]), "\n")
