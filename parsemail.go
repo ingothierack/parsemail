@@ -17,6 +17,7 @@ import (
 const contentTypeMultipartMixed = "multipart/mixed"
 const contentTypeMultipartAlternative = "multipart/alternative"
 const contentTypeMultipartRelated = "multipart/related"
+const contentTypeMultipartSigned = "multipart/signed"
 const contentTypeTextHTML = "text/html"
 const contentTypeTextPlain = "text/plain"
 
@@ -40,6 +41,10 @@ func Parse(r io.Reader) (email Email, err error) {
 	switch contentType {
 	case contentTypeMultipartMixed:
 		email.TextBody, email.HTMLBody, email.Attachments, email.EmbeddedFiles, err = parseMultipartMixed(msg.Body, params["boundary"])
+	case contentTypeMultipartSigned:
+		email.TextBody, email.HTMLBody, email.Attachments, email.EmbeddedFiles, err = parseMultipartMixed(msg.Body, params["boundary"])
+	case contentTypeMultipartRelated:
+		email.TextBody, email.HTMLBody, email.EmbeddedFiles, err = parseMultipartRelated(msg.Body, params["boundary"])
 	case contentTypeMultipartAlternative:
 		email.TextBody, email.HTMLBody, email.EmbeddedFiles, err = parseMultipartAlternative(msg.Body, params["boundary"])
 	case contentTypeTextPlain:
@@ -237,6 +242,11 @@ func parseMultipartMixed(msg io.Reader, boundary string) (textBody, htmlBody str
 				return textBody, htmlBody, attachments, embeddedFiles, err
 			}
 		} else if contentType == contentTypeMultipartRelated {
+			textBody, htmlBody, embeddedFiles, err = parseMultipartRelated(part, params["boundary"])
+			if err != nil {
+				return textBody, htmlBody, attachments, embeddedFiles, err
+			}
+		} else if contentType == contentTypeMultipartSigned {
 			textBody, htmlBody, embeddedFiles, err = parseMultipartRelated(part, params["boundary"])
 			if err != nil {
 				return textBody, htmlBody, attachments, embeddedFiles, err
