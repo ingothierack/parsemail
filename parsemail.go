@@ -134,6 +134,8 @@ func parseMultipartRelated(msg io.Reader, boundary string) (textBody, htmlBody s
 			encoding := part.Header.Get("Content-Transfer-Encoding")
 			if strings.EqualFold(encoding, "base64") {
 				ppContent, _ = base64.StdEncoding.DecodeString(string(plain))
+			} else if strings.EqualFold(encoding, "quoted-printable") {
+				ppContent, _ = ioutil.ReadAll(quotedprintable.NewReader(strings.NewReader(string(plain))))
 			} else {
 				ppContent = plain
 			}
@@ -146,6 +148,8 @@ func parseMultipartRelated(msg io.Reader, boundary string) (textBody, htmlBody s
 			encoding := part.Header.Get("Content-Transfer-Encoding")
 			if strings.EqualFold(encoding, "base64") {
 				ppContent, _ = base64.StdEncoding.DecodeString(string(plain))
+			} else if strings.EqualFold(encoding, "quoted-printable") {
+				ppContent, _ = ioutil.ReadAll(quotedprintable.NewReader(strings.NewReader(string(plain))))
 			} else {
 				ppContent = plain
 			}
@@ -271,6 +275,16 @@ func parseMultipartMixed(msg io.Reader, boundary string) (textBody, htmlBody str
 				return textBody, htmlBody, attachments, embeddedFiles, err
 			}
 		} else if contentType == contentTypeMultipartSigned {
+			textBody, htmlBody, embeddedFiles, err = parseMultipartRelated(part, params["boundary"])
+			if err != nil {
+				return textBody, htmlBody, attachments, embeddedFiles, err
+			}
+		} else if contentType == contentTypeTextPlain {
+			textBody, htmlBody, embeddedFiles, err = parseMultipartRelated(part, params["boundary"])
+			if err != nil {
+				return textBody, htmlBody, attachments, embeddedFiles, err
+			}
+		} else if contentType == contentTypeMultipartMixed {
 			textBody, htmlBody, embeddedFiles, err = parseMultipartRelated(part, params["boundary"])
 			if err != nil {
 				return textBody, htmlBody, attachments, embeddedFiles, err
