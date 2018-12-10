@@ -1,3 +1,7 @@
+<aside class="warning">
+need refactoring - changes currently work for me
+</aside>
+
 # Parsemail - simple email parsing Go library
 
 [![Build Status](https://circleci.com/gh/DusanKasan/parsemail.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/DusanKasan/parsemail) [![Coverage Status](https://coveralls.io/repos/github/DusanKasan/Parsemail/badge.svg?branch=master)](https://coveralls.io/github/DusanKasan/Parsemail?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/DusanKasan/parsemail)](https://goreportcard.com/report/github.com/DusanKasan/parsemail)
