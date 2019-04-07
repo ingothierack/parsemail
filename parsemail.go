@@ -462,9 +462,17 @@ func (hp headerParser) parseAddressList(s string) (ma []*mail.Address) {
 	if hp.err != nil {
 		return
 	}
+	var err error
 
+	dec := new(mime.WordDecoder)
 	if strings.Trim(s, " \n") != "" {
 		ma, hp.err = mail.ParseAddressList(s)
+		for index, em := range ma {
+			ma[index].Name, err = dec.DecodeHeader(em.Name)
+			if err != nil {
+				return
+			}
+		}
 		return
 	}
 
